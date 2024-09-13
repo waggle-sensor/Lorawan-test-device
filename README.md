@@ -5,9 +5,8 @@ This repo shows hardware and software configurations to build a device used to t
 ## Table of Contents
 1. [Features](#features)
 1. [Hardware Needed](#hardware-needed)
-1. [Connecting The Hardware](#connecting-the-hardware)
-1. [Installing Software](#installing-software)
 1. [Assembling The Device](#assembling-the-device)
+1. [Installing Software](#installing-software)
 1. [Connect MKR WAN 1310 to Computer](#connect-mkr-wan-1310-to-computer)
 1. [Running The Software](#running-the-software)
 1. [Testing Device Using Chirpstack](#testing-device-using-chirpstack)
@@ -34,7 +33,7 @@ This repo shows hardware and software configurations to build a device used to t
 
 >TODO: Add button you end up using
 
-## Connecting The Hardware
+## Assembling The Device
 
 <img src='./images/wiring.jpg' alt='wiring' height='200'>
 
@@ -69,19 +68,6 @@ This repo shows hardware and software configurations to build a device used to t
 1. An additional library must be installed to get "i2c header", look up "Adafruit BusIO library" and install `Adafruit BusIO by Adafruit`.
 
    <img src='./images/busio_lib_download.png' alt='BusIO library download' height='400'>
-
-## Assembling The Device
->TODO: finish this section, and delete the example
-
-1. Grab the soil sensor
-
-    <img src='./images/sensor.jpeg' alt='Sensor' height='400'>
-
-2. Connect the wires from the sensor to the `MKR WAN 1310` as shown:
-
-    <img src='./images/sensor_connected.jpeg' alt='Connected Board' height='500'>
-
-    > Note: red wire is for power, black is for ground, white for soil moisture, and blue for soil temperature
 
 ## Connect MKR WAN 1310 to Computer
 
