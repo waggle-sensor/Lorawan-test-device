@@ -8,8 +8,8 @@ This repo shows hardware and software configurations to build a device used to t
 1. [Assembling The Device](#assembling-the-device)
 1. [Installing Software](#installing-software)
 1. [Connect MKR WAN 1310 to Computer](#connect-mkr-wan-1310-to-computer)
-1. [Running The Software](#running-the-software)
-1. [Testing Device Using Chirpstack](#testing-device-using-chirpstack)
+<!-- 1. [Running The Software](#running-the-software)
+1. [Testing Device Using Chirpstack](#testing-device-using-chirpstack) -->
 1. [Future Work](#future-work)
 
 >TODO: Add section about getting the deveui of the mkrwan. Use a setup.ino file that prints deveui?
@@ -84,6 +84,7 @@ This repo shows hardware and software configurations to build a device used to t
 
     >NOTE: If Arduino MKR WAN 1310 is not showing up, pressing the "RST" (reset) button twice in quick succession will put the board in bootloader mode. Instead of running a sketch the Arduino will wait until a sketch is uploaded helping the board to show up in your Arduino IDE. 
 
+<!-- These sections aren't finished - FL
 ## Running the Software
 >TODO: finish this section, and delete the example
 
@@ -144,7 +145,7 @@ This repo shows hardware and software configurations to build a device used to t
 
 Viewing the uplink packets by clicking `up` in the device's events tab will now display the measurements and its values.
 
-<img src='./images/decoded_packets.png' alt='Decoded Packets' height='700'>
+<img src='./images/decoded_packets.png' alt='Decoded Packets' height='700'> -->
 
 # Future Work
 - Configure to use LED if display is not detected.
