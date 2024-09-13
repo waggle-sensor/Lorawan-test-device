@@ -5,6 +5,7 @@ This repo shows hardware and software configurations to build a device used to t
 ## Table of Contents
 1. [Features](#features)
 1. [Hardware Needed](#hardware-needed)
+1. [Connecting The Hardware](#connecting-the-hardware)
 1. [Installing Software](#installing-software)
 1. [Assembling The Device](#assembling-the-device)
 1. [Connect MKR WAN 1310 to Computer](#connect-mkr-wan-1310-to-computer)
