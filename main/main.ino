@@ -17,7 +17,7 @@ bool useLEDOnly = false;
 LoRaModem modem;
 String appEui = SECRET_APP_EUI;
 String appKey = SECRET_APP_KEY;
-const int MAX_WAIT_TIME = 60000;
+const int PACKET_INTERVAL = 15000; // Send packet every 15 seconds
 
 // button vars
 const int BUTTON_PIN = 2;
@@ -111,7 +111,6 @@ void drawPassed(const char* message) {
   display.setCursor(SCREEN_WIDTH / 2.5, SCREEN_HEIGHT - 8);
   display.println(message);
   display.display();
-  delay(15000);
 }
 
 void drawFailed(const char* message) {
@@ -128,7 +127,6 @@ void drawFailed(const char* message) {
   display.setCursor(SCREEN_WIDTH / 2.5, SCREEN_HEIGHT - 8);
   display.println(message);
   display.display();
-  delay(15000);
 }
 
 void writeStarting() {
@@ -148,7 +146,7 @@ void writeStarting() {
   delay(100);
 
   display.startscrollleft(0x00, 0x0F);
-  delay(5000);
+  delay(3000);
   display.stopscroll();
 }
 
@@ -166,44 +164,11 @@ void myDelay(int waitTime) {
 }
 
 bool joinNetwork() {
-  int connected = modem.joinOTAA(appEui, appKey, 15000);
-  return connected;
-}
-
-bool SendPacket() {
-  uint8_t payload[30];
-  int ValueToSend = 1;
-  int idx = 0;
-  payload[idx++] = 1;
-  payload[idx++] = 0;
-  payload[idx++] = ValueToSend;
-
-  modem.beginPacket();
-  for (uint8_t c = 0; c < idx; c++) {
-    modem.write(payload[c]);
-  }
-  int err = modem.endPacket(true);
-  return err > 0;
-}
-
-bool LorawanTest() {
-  modem.begin(US915);
-  myDelay(200);
-
-  modem.minPollInterval(60);
-  myDelay(200);
-  modem.setPort(10);
-  myDelay(200);
-  modem.dataRate(3);
-  myDelay(200);
-  modem.setADR(true);
-  myDelay(200);
-
   int waitTime = 8000;
   while (true) {
-    if (!joinNetwork()) {
+    if (modem.joinOTAA(appEui, appKey, 15000)) {
       drawPassed("Join Pass");
-      break;
+      return true;
     }
     myDelay(waitTime);
     waitTime *= 2;
@@ -212,21 +177,17 @@ bool LorawanTest() {
       return false;
     }
   }
+}
 
-  waitTime = 8000;
-  while (true) {
-    if (SendPacket()) {
-      drawPassed("Packet Sent");
-      return true;
-    }
-    myDelay(waitTime);
-    waitTime *= 2;
-    if (waitTime > MAX_WAIT_TIME) {
-      drawFailed("Packet Fail");
-      return false;
-    }
-  }
-  return false;
+bool SendPacket() {
+  uint8_t payload[3];
+  payload[0] = 1; // data channel
+  payload[1] = 0; // Cayenne data type
+  payload[2] = 1; // sample value
+
+  modem.beginPacket();
+  modem.write(payload, 3);
+  return modem.endPacket(true) > 0;
 }
 
 void setup() {
@@ -241,19 +202,33 @@ void setup() {
     display.clearDisplay();
     initializeSnakeAngles();
   }
+
+  drawWaiting();
+  writeStarting();
+
+  modem.begin(US915);
+  myDelay(200);
+  modem.minPollInterval(60);
+  modem.setPort(10);
+  modem.dataRate(3);
+  modem.setADR(true);
+  myDelay(200);
+
+  if (!joinNetwork()) {
+    // join failed, stop further execution
+    while (true) {
+      blinkFailed();
+      delay(5000);
+    }
+  }
 }
 
 void loop() {
-  currentFrame = 0;
-  drawWaiting();
-  writeStarting();
-  LorawanTest();
-  // if (digitalRead(BUTTON_PIN) == HIGH) { // Button is pressed...
-  //   writeStarting();
-  //   if(LorawanTest()){
-  //     drawPassed("Test Passed");
-  //   } else {
-  //     drawFailed("Test Failed");
-  //   }
-  // }
+  if (SendPacket()) {
+    drawPassed("Packet Sent");
+  } else {
+    drawFailed("Packet Fail");
+  }
+
+  myDelay(PACKET_INTERVAL);
 }
