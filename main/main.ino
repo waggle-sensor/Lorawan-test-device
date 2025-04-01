@@ -248,12 +248,12 @@ void loop() {
   drawWaiting();
   writeStarting();
   LorawanTest();
-  if (digitalRead(BUTTON_PIN) == HIGH) { // Button is pressed...
-    writeStarting();
-    if(LorawanTest()){
-      drawPassed("Test Passed");
-    } else {
-      drawFailed("Test Failed");
-    }
-  }
+  // if (digitalRead(BUTTON_PIN) == HIGH) { // Button is pressed...
+  //   writeStarting();
+  //   if(LorawanTest()){
+  //     drawPassed("Test Passed");
+  //   } else {
+  //     drawFailed("Test Failed");
+  //   }
+  // }
 }
