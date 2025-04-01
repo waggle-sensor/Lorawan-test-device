@@ -5,32 +5,33 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//display vars
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-#define OLED_RESET     -1 // -1 sharing Arduino reset pin
-#define SCREEN_ADDRESS 0x3C 
+// display vars
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+bool useLEDOnly = false;
 
-//lorawan vars
+// lorawan vars
 LoRaModem modem;
 String appEui = SECRET_APP_EUI;
 String appKey = SECRET_APP_KEY;
-const int MAX_WAIT_TIME = 180000; // Maximum wait time (3 minutes)
+const int MAX_WAIT_TIME = 60000;
 
-//Button vars
-const int BUTTON_PIN = 2; 
+// button vars
+const int BUTTON_PIN = 2;
 
-// Loading snake animation vars
+// loading snake vars
 const int FRAMES = 12;
-const int FRAME_DELAY = 100; // milliseconds per frame
+const int FRAME_DELAY = 100;
 const float ANGLE_INCREMENT = 2 * PI / FRAMES;
-const int SNAKE_LEN = 8; // Length of the snake
+const int SNAKE_LEN = 8;
 int currentFrame = 0;
-float angles[SNAKE_LEN]; // Array to store angles for each segment of the snake
+float angles[SNAKE_LEN];
 
 void blinkLoading() {
-  int WaitTime=1500;
+  int WaitTime = 1500;
   for (int i = 0; i < 4; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(WaitTime);
@@ -40,7 +41,7 @@ void blinkLoading() {
 }
 
 void blinkPassed() {
-  int WaitTime=100;
+  int WaitTime = 100;
   for (int i = 0; i < 5; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(WaitTime);
@@ -50,7 +51,7 @@ void blinkPassed() {
 }
 
 void blinkFailed() {
-  int WaitTime=600;
+  int WaitTime = 600;
   for (int i = 0; i < 5; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(WaitTime);
@@ -60,30 +61,33 @@ void blinkFailed() {
 }
 
 void drawWaiting() {
+  if (useLEDOnly) {
+    blinkLoading();
+    return;
+  }
   display.clearDisplay();
-
-  // Write text
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(18, 10);
   display.println("Press Button to");
   display.setCursor(30, 20);
   display.println("Start Test...");
-
   display.display();
 }
 
 void initializeSnakeAngles() {
-  // Initialize angles for each segment of the snake
   for (int i = 0; i < SNAKE_LEN; i++) {
     angles[i] = i * 2 * PI / SNAKE_LEN;
   }
 }
 
 void drawLoadingSnake(int frame) {
-  display.clearDisplay();
+  if (useLEDOnly) {
+    blinkLoading();
+    return;
+  }
 
-  // Draw each segment of the snake
+  display.clearDisplay();
   for (int i = 0; i <= SNAKE_LEN; i++) {
     float angle = angles[i] + frame * ANGLE_INCREMENT;
     int x = constrain(SCREEN_WIDTH / 2 + 10 * cos(angle), 0, SCREEN_WIDTH - 1); 
@@ -93,49 +97,49 @@ void drawLoadingSnake(int frame) {
   display.display();
 }
 
-void drawPassed() {
+void drawPassed(const char* message) {
+  if (useLEDOnly) {
+    blinkPassed();
+    return;
+  }
+
   display.clearDisplay();
-
-  // Draw the line for the checkmark
-  display.drawLine(SCREEN_WIDTH/2, 20, 105, 0, SSD1306_WHITE); 
-
-  // Draw the lower line of the checkmark (shorter)
-  display.drawLine(50, 15, SCREEN_WIDTH/2, 20, SSD1306_WHITE);
-
-  // Draw text
+  display.drawLine(SCREEN_WIDTH / 2, 20, 105, 0, SSD1306_WHITE); 
+  display.drawLine(50, 15, SCREEN_WIDTH / 2, 20, SSD1306_WHITE);
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(SCREEN_WIDTH/2.5, SCREEN_HEIGHT - 8);
-  display.println("Passed");
-
-  // Display on OLED
+  display.setCursor(SCREEN_WIDTH / 2.5, SCREEN_HEIGHT - 8);
+  display.println(message);
   display.display();
   delay(15000);
 }
 
-void drawFailed() {
+void drawFailed(const char* message) {
+  if (useLEDOnly) {
+    blinkFailed();
+    return;
+  }
+
   display.clearDisplay();
-
-  // Draw the first diagonal line of the X
   display.drawLine(30, 5, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 8, SSD1306_WHITE);
-
-  // Draw the second diagonal line of the X
   display.drawLine(30, SCREEN_HEIGHT - 8, SCREEN_WIDTH - 20, 5, SSD1306_WHITE);
-
-  // Draw text
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(SCREEN_WIDTH/2.5, SCREEN_HEIGHT - 8);
-  display.println("Failed");
-
-  // Display on OLED
+  display.setCursor(SCREEN_WIDTH / 2.5, SCREEN_HEIGHT - 8);
+  display.println(message);
   display.display();
   delay(15000);
 }
 
 void writeStarting() {
-  display.clearDisplay();
+  if (useLEDOnly) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(2000);
+    digitalWrite(LED_BUILTIN, LOW);
+    return;
+  }
 
+  display.clearDisplay();
   display.setTextSize(1.8);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(10, SCREEN_HEIGHT / 2);
@@ -161,53 +165,33 @@ void myDelay(int waitTime) {
   }
 }
 
-bool joinNetwork() {  
-  int connected = modem.joinOTAA(appEui, appKey, 15000); // 15 sec timeout
-  if (connected) {
-    return true;
-  } else {
-    return false;
-  }
+bool joinNetwork() {
+  int connected = modem.joinOTAA(appEui, appKey, 15000);
+  return connected;
 }
 
 bool SendPacket() {
-  //Cayenne encoding
-  uint8_t payload[30]; // Allow for up to 30 byte payload
+  uint8_t payload[30];
   int ValueToSend = 1;
   int idx = 0;
+  payload[idx++] = 1;
+  payload[idx++] = 0;
+  payload[idx++] = ValueToSend;
 
-  //Cayenne encoding
-  payload[idx++] = 1; //data channel
-  payload[idx++] = 0; // Cayenne data type for digital input (data type 0)
-  payload[idx++] = ValueToSend; // The actual value to send (either 0 or 1)
-
-  //send packets
   modem.beginPacket();
   for (uint8_t c = 0; c < idx; c++) {
     modem.write(payload[c]);
   }
   int err = modem.endPacket(true);
-
-  if (err > 0) {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return err > 0;
 }
 
 bool LorawanTest() {
-
   modem.begin(US915);
   myDelay(200);
-  
-  // Set poll interval to 60 secs.
+
   modem.minPollInterval(60);
   myDelay(200);
-  // NOTE: independent of this setting, the modem will
-  // not allow sending more than one message every 2 minutes,
-  // this is enforced by firmware and can not be changed.
   modem.setPort(10);
   myDelay(200);
   modem.dataRate(3);
@@ -215,58 +199,61 @@ bool LorawanTest() {
   modem.setADR(true);
   myDelay(200);
 
-  int waitTime = 8000; // Initial wait time
+  int waitTime = 8000;
   while (true) {
     if (!joinNetwork()) {
+      drawPassed("Join Pass");
       break;
     }
-    
     myDelay(waitTime);
-    // Double the wait time
     waitTime *= 2;
     if (waitTime > MAX_WAIT_TIME) {
-      return false; // Test failed, Cannot join network (maximum wait time reached)
+      drawFailed("Join Fail");
+      return false;
     }
   }
 
   waitTime = 8000;
   while (true) {
     if (SendPacket()) {
-      return true; // Test passed
+      drawPassed("Packet Sent");
+      return true;
     }
-    
-    // Retry logic
     myDelay(waitTime);
-    // Double the wait time
     waitTime *= 2;
     if (waitTime > MAX_WAIT_TIME) {
-      return false; // Test failed, packet was not sent (maximum wait time reached)
+      drawFailed("Packet Fail");
+      return false;
     }
   }
-
-  return false; //default response
+  return false;
 }
 
 void setup() {
-  delay(5000); //allow some downtime to upload a new sketch
+  delay(5000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
-  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
-  display.display();
-  display.clearDisplay();
-  initializeSnakeAngles();
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    useLEDOnly = true;
+  } else {
+    display.display();
+    display.clearDisplay();
+    initializeSnakeAngles();
+  }
 }
 
 void loop() {
-  //reset frame
   currentFrame = 0;
   drawWaiting();
+  writeStarting();
+  LorawanTest();
   if (digitalRead(BUTTON_PIN) == HIGH) { // Button is pressed...
     writeStarting();
     if(LorawanTest()){
-      drawPassed();
+      drawPassed("Test Passed");
     } else {
-      drawFailed();
+      drawFailed("Test Failed");
     }
   }
 }
