@@ -4,6 +4,7 @@ This repo shows hardware and software configurations to build a device used to t
 
 ## Table of Contents
 1. [Features](#features)
+1. [Device Manual](#device-manual)
 1. [Hardware Needed](#hardware-needed)
 1. [Assembling The Device](#assembling-the-device)
 1. [Installing Software](#installing-software)
@@ -16,12 +17,149 @@ This repo shows hardware and software configurations to build a device used to t
 
 ## Features
 
-- Waits to perform the test until a button is pressed.
 - Sends a join request to lorawan network then a packet. If both are succesful shows a pass in the display.
 - Shows a fail in the display if join request or packet sending are not succesful.
 - Shows a loading animation in the display while the test is being performed.
 - You can use the device to test multiple gateways by ensuring that the Lorawan Network servers (Chirpstack) are configured with the same [App key](./main/arduino_secrets.h) and `deveui` as the device.
 - Compatible with our [lorawan testing script](https://github.com/waggle-sensor/surya-tools/tree/main?tab=readme-ov-file#lorawan-test-script-overview).
+
+## Device Manual
+📘 **LoRaWAN Packet Sender – User Manual**
+
+### 🛠️ Device Overview
+
+This device is designed to test connectivity to a LoRaWAN network and continuously send packets at regular intervals. It features:
+- **LoRaWAN communication via OTAA**
+- **Visual feedback** using an OLED screen or built-in LED
+- **Automatic fallback** to LED indicators when OLED is not detected
+- **15-second packet interval**
+
+---
+
+### 📦 What’s Included
+- LoRaWAN device with MKRWAN module
+- 128x32 I2C OLED display (optional)
+- Built-in LED (for fallback feedback)
+
+---
+
+### ⚙️ Hardware Requirements
+- LoRa-enabled microcontroller (e.g., Arduino MKR WAN 1300)
+- 128x32 OLED Display (I2C, address: `0x3C`) – optional
+- LoRaWAN Gateway (registered with Chirpstack)
+- Device keys (App EUI, App Key)
+
+---
+
+### 🔌 Wiring & Setup
+
+| Component     | Arduino Pin     |
+|---------------|------------------|
+| OLED SCL      | SCL (shared with I2C) |
+| OLED SDA      | SDA (shared with I2C) |
+| OLED VCC      | 3.3V             |
+| OLED GND      | GND              |
+
+> Ensure the device is registered in Chirpstack with the **DevEUI**:  
+`a8610a34342f7319`
+
+---
+
+### 🔐 Configuration
+
+Before uploading the sketch, set your secrets in `arduino_secrets.h`:
+
+```cpp
+#define SECRET_APP_EUI "0000000000000"
+#define SECRET_APP_KEY "f8ca2af634a5da3800c34538a734445c"
+```
+
+These should match the credentials assigned to your device in the Chirpstack application.
+
+---
+
+### 🚀 How It Works
+
+1. **Startup Delay**: On boot, the device waits ~5 seconds to allow USB firmware upload if needed.
+
+2. **Display Detection**:
+   - If the OLED is connected and detected over I²C, it is used for visual output.
+   - If not detected, the built-in **LED is used** for all status feedback.
+
+3. **LoRaWAN Join**:
+   - Uses **OTAA (Over-The-Air Activation)** to join the network.
+   - Retries up to 60 seconds with exponential backoff.
+   - Feedback:
+     - ✅ **"Join Pass"** – successfully joined
+     - ❌ **"Join Fail"** – failed to join after max wait time
+
+4. **Packet Sending**:
+   - A fixed data packet is sent every **15 seconds**
+   - Payload: `[1, 0, 1]` → corresponds to Cayenne LPP format (digital input)
+   - Feedback:
+     - ✅ **"Packet Sent"**
+     - ❌ **"Packet Fail"**
+
+---
+
+### 💡 Visual Feedback
+
+| Event         | OLED Display                  | LED Behavior              |
+|---------------|-------------------------------|---------------------------|
+| Startup       | "Starting Test..." + scroll   | LED on for 2s             |
+| Join Success  | Checkmark + "Join Pass"       | 5 fast blinks             |
+| Join Fail     | X mark + "Join Fail"          | 5 slow blinks             |
+| Packet Sent   | Checkmark + "Packet Sent"     | 5 fast blinks             |
+| Packet Fail   | X mark + "Packet Fail"        | 5 slow blinks             |
+| Wait Period   | Snake animation               | Slow blinking LED         |
+
+---
+
+### 🔁 How to Restart the Device
+
+To restart the test cycle:
+- Simply **reset (RST button on board) or power-cycle** the device.
+- It will reattempt to join and continue sending packets automatically.
+
+---
+
+### ❗ Troubleshooting
+
+| Problem                   | Solution |
+|----------------------------|----------|
+| **No display output**       | Ensure OLED is wired to correct I²C pins and powered. Device will fallback to LED if not detected. |
+| **LED doesn’t blink**       | Ensure firmware is uploaded and the board is powered. |
+| **Packets not received**    | Check LoRa gateway status and verify App EUI/App Key match those in Chirpstack. |
+| **Device never joins**      | Check network coverage, App Key, and device registration in Chirpstack. |
+
+---
+
+### 🔄 OTA Behavior Summary
+
+- **Join Request Timeout**: 60 seconds
+- **Retry Delay**: Starts at 8 seconds and doubles
+- **Join Result**: If join fails after max time, the device halts
+
+---
+
+### 📤 Data Format
+
+The packet sent is in **Cayenne LPP** format:
+```
+[ 1, 0, 1 ]
+```
+
+- Channel: `1`
+- Type: `0` (Digital Input)
+- Value: `1`
+
+---
+
+### 📅 Version Notes
+
+- **Packet Interval**: 15 seconds
+- **OLED fallback**: Automatically uses LED if screen not detected
+- **Join Retry**: Exponential backoff up to 1 minute
 
 ## Hardware Needed
 
@@ -30,8 +168,6 @@ This repo shows hardware and software configurations to build a device used to t
 - [Male/Male Jumper Wires](https://www.amazon.com/Solderless-Multicolored-Electronic-Breadboard-Protoboard/dp/B09FP517VM)
 - [Breadboard](https://www.adafruit.com/product/65)
 - [OLED Display](https://www.amazon.com/UCTRONICS-SSD1306-Self-Luminous-Display-Raspberry/dp/B072Q2X2LL)
-
->TODO: Add button you end up using
 
 ## Assembling The Device
 
@@ -148,5 +284,4 @@ Viewing the uplink packets by clicking `up` in the device's events tab will now 
 <img src='./images/decoded_packets.png' alt='Decoded Packets' height='700'> -->
 
 # Future Work
-- Configure to use LED if display is not detected.
 - include instructions on how to connect the hardware
