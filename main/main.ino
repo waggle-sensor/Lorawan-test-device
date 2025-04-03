@@ -169,8 +169,9 @@ void myDelay(int waitTime) {
 bool joinNetwork() {
   int waitTime = 8000;
   while (true) {
-    if (modem.joinOTAA(appEui, appKey, 15000)) {
+    if (modem.joinOTAA(appEui, appKey, 60000)) {
       drawPassed("Join Pass");
+      delay(10000);
       return true;
     }
     myDelay(waitTime);
@@ -229,8 +230,10 @@ void setup() {
 void loop() {
   if (SendPacket()) {
     drawPassed("Packet Sent");
+    delay(5000);
   } else {
     drawFailed("Packet Fail");
+    delay(5000);
   }
 
   myDelay(PACKET_INTERVAL);
