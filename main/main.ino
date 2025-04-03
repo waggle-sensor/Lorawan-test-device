@@ -33,41 +33,38 @@ float angles[SNAKE_LEN];
 //wait time
 const int MAX_WAIT_TIME = 60000;
 
-void blinkLoading() {
-  int WaitTime = 1500;
-  for (int i = 0; i < 4; i++) {
+void blinkLoading(int waitTime) {
+  int blinkDelay = 1500;
+  int iter = waitTime / blinkDelay;
+  for (int i = 0; i < iter; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(WaitTime);
+    delay(blinkDelay);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(WaitTime);
+    delay(blinkDelay);
   }
 }
 
 void blinkPassed() {
-  int WaitTime = 100;
+  int blinkDelay = 100;
   for (int i = 0; i < 5; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(WaitTime);
+    delay(blinkDelay);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(WaitTime);
+    delay(blinkDelay);
   }
 }
 
 void blinkFailed() {
-  int WaitTime = 600;
+  int blinkDelay = 600;
   for (int i = 0; i < 5; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(WaitTime);
+    delay(blinkDelay);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(WaitTime);
+    delay(blinkDelay);
   }
 }
 
 void drawWaiting() {
-  if (useLEDOnly) {
-    blinkLoading();
-    return;
-  }
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -85,11 +82,6 @@ void initializeSnakeAngles() {
 }
 
 void drawLoadingSnake(int frame) {
-  if (useLEDOnly) {
-    blinkLoading();
-    return;
-  }
-
   display.clearDisplay();
   for (int i = 0; i <= SNAKE_LEN; i++) {
     float angle = angles[i] + frame * ANGLE_INCREMENT;
@@ -159,6 +151,11 @@ void Loading() {
 }
 
 void myDelay(int waitTime) {
+  if (useLEDOnly) {
+    blinkLoading(waitTime);
+    return;
+  }
+
   int iter = waitTime / FRAME_DELAY;
   for (int i = 0; i < iter; i++) {
     Loading();
@@ -171,7 +168,7 @@ bool joinNetwork() {
   while (true) {
     if (modem.joinOTAA(appEui, appKey, 60000)) {
       drawPassed("Join Pass");
-      delay(10000);
+      delay(5000);
       return true;
     }
     myDelay(waitTime);
@@ -198,16 +195,30 @@ void setup() {
   delay(5000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
+  Wire.begin();
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+  // if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+  //   useLEDOnly = true;
+  // } else {
+  //   display.display();
+  //   display.clearDisplay();
+  //   initializeSnakeAngles();
+  // }
+
+  // Manually check if the OLED responds on I2C
+  Wire.beginTransmission(SCREEN_ADDRESS);
+  if (Wire.endTransmission() != 0) {
     useLEDOnly = true;
   } else {
-    display.display();
-    display.clearDisplay();
-    initializeSnakeAngles();
+    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+      useLEDOnly = true;
+    } else {
+      display.display();
+      display.clearDisplay();
+      initializeSnakeAngles();
+    }
   }
 
-  drawWaiting();
   writeStarting();
 
   modem.begin(US915);
