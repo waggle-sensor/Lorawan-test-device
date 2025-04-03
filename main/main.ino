@@ -30,6 +30,9 @@ const int SNAKE_LEN = 8;
 int currentFrame = 0;
 float angles[SNAKE_LEN];
 
+//wait time
+const int MAX_WAIT_TIME = 60000;
+
 void blinkLoading() {
   int WaitTime = 1500;
   for (int i = 0; i < 4; i++) {
