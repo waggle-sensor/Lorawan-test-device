@@ -59,7 +59,6 @@ This device is designed to test connectivity to a LoRaWAN network and continuous
 | OLED SDA      | SDA (shared with I2C) |
 | OLED VCC      | 3.3V             |
 | OLED GND      | GND              |
-| Button        | Pin 2 (to GND when pressed) |
 
 > Ensure the device is registered in Chirpstack with the **DevEUI**:  
 `a8610a34342f7319`
@@ -169,8 +168,6 @@ The packet sent is in **Cayenne LPP** format:
 - [Male/Male Jumper Wires](https://www.amazon.com/Solderless-Multicolored-Electronic-Breadboard-Protoboard/dp/B09FP517VM)
 - [Breadboard](https://www.adafruit.com/product/65)
 - [OLED Display](https://www.amazon.com/UCTRONICS-SSD1306-Self-Luminous-Display-Raspberry/dp/B072Q2X2LL)
-
->TODO: Add button you end up using
 
 ## Assembling The Device
 
