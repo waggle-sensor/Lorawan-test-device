@@ -220,15 +220,13 @@ The packet sent is in **Cayenne LPP** format:
 
     >NOTE: If Arduino MKR WAN 1310 is not showing up, pressing the "RST" (reset) button twice in quick succession will put the board in bootloader mode. Instead of running a sketch the Arduino will wait until a sketch is uploaded helping the board to show up in your Arduino IDE. 
 
-<!-- These sections aren't finished - FL
-## Running the Software
->TODO: finish this section, and delete the example
+## Getting your DevEUI
 
 1. Retrieve your MKR WAN 1310's DevEUI by using `setup.ino` in your `Arduino IDE`. The serial monitor will display your DevEUI. When you run `setup.ino` you should see a orange light glow on the board
 
     <img src='./images/DevEUI.jpeg' alt='DevEUI' height='50'>
 
-    >NOTE: The program will fail because the device hasn't been given an App key
+## Adding your Device to a Network Server
 
 1. Using the LoRaWAN Network Server’s portal or API, add your device with the option to use `OTAA` set to yes.
 
@@ -236,26 +234,15 @@ The packet sent is in **Cayenne LPP** format:
 
 1. Provide the application key to `arduino_secrets.h`
 
-1. Run `setup.ino` in your `Arduino IDE`, if the device connects successfully the serial monitor will display the values the device is sending and your Network Server will receive a `join request` then the device's values.
-
-    <img src='./images/values_sent.jpeg' alt='values sent' height='100'>
-
-    >NOTE: `main.ino` and `setup.ino` is using `US915` as its LoraWAN region. This must be changed in both files for different countries.
-
-1. Finally for your Network Server to decript the uplink packets, use its portal or API to provide the codec: `codec.js`.
-
->NOTE: Once you are done debugging the device, you can comment out the serial commands such as print().
+1. For your Network Server to decript the uplink packets, use its portal or API to provide the codec: `codec.js`.
 
 ## Testing Device Using Chirpstack
->TODO: finish this section, and delete the example
 
 [Chirpstack](https://www.chirpstack.io/) was used as our Network Server and a `RAK Discover Kit 2` was used as our Gateway.
 
-1. Retrieve your MKR WAN 1310's DevEUI by using `main.ino` in your `Arduino IDE`. The serial monitor will display your DevEUI.
+1. Retrieve your MKR WAN 1310's DevEUI by using `setup.ino` in your `Arduino IDE`.
 
     <img src='./images/DevEUI.jpeg' alt='DevEUI' height='50'>
-
-    >NOTE: The program will fail because the device hasn't been given an App key
 
 1. Using Chirpstack's UI, add your device using `OTAA` following [Chirpstack's Documentation](https://www.chirpstack.io/docs/guides/connect-device.html)
 
@@ -267,13 +254,7 @@ The packet sent is in **Cayenne LPP** format:
 
     >NOTE: Chripstack does not use `APP EUI` when connecting devices via `OTAA` so this can be left as is.
 
-1. Run `setup.ino` in your `Arduino IDE`, if the device connects successfully the serial monitor will display the values the device is sending and chirpstack will receive a `join request` then the device's values.
-
-    <img src='./images/values_sent.jpeg' alt='values sent' height='100'>
-
-    <img src='./images/uplink_packet.png' alt='Uplink Packet' height='500'>
-
-    >NOTE: The device might take a couple of minutes to join the LoRaWAN network.
+1. Run `main.ino` in your `Arduino IDE`, if the device connects successfully the LED screen will display a checkmark (follow device manual on what blinks and symbols on LED screen mean)
 
 1. Finally for chirpstack to decript the uplink packets, provide the `codec.js` via the Device Profile's Codec tab.
 
@@ -281,7 +262,4 @@ The packet sent is in **Cayenne LPP** format:
 
 Viewing the uplink packets by clicking `up` in the device's events tab will now display the measurements and its values.
 
-<img src='./images/decoded_packets.png' alt='Decoded Packets' height='700'> -->
-
-# Future Work
-- include instructions on how to connect the hardware
+<img src='./images/decoded_packets.png' alt='Decoded Packets' height='700'> 
