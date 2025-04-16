@@ -33,6 +33,13 @@ float angles[SNAKE_LEN];
 //wait time
 const int MAX_WAIT_TIME = 60000;
 
+// packet sizes
+int packetSizes[] = {32, 64, 96, 128, 132};
+int numPacketSizes = sizeof(packetSizes) / sizeof(packetSizes[0]);
+
+// Global counter
+int packetId = 0;  
+
 void blinkLoading(int waitTime) {
   int blinkDelay = 1500;
   int iter = waitTime / blinkDelay;
@@ -180,15 +187,53 @@ bool joinNetwork() {
   }
 }
 
-bool SendPacket() {
-  uint8_t payload[3];
-  payload[0] = 1; // data channel
-  payload[1] = 0; // Cayenne data type
-  payload[2] = 1; // sample value
+bool SendPacketWithSize(int size, int packetId) {
+  if (size > 255) return false; // Safety check for byte overrun
+
+  uint8_t payload[size];
+
+  payload[0] = packetId; // Packet ID in first byte
+
+  for (int i = 1; i < size - 1; i++) {
+    payload[i] = i % 256;       // Fill with pattern or zeros
+  }
+
+  payload[size - 1] = size;     // Packet size in last byte
 
   modem.beginPacket();
-  modem.write(payload, 3);
-  return modem.endPacket(true) > 0;
+  modem.write(payload, size);
+  bool success = modem.endPacket(true) > 0;
+
+  return success;
+}
+
+void displayPacketSize(int size, int packetId) {
+  if (useLEDOnly) {
+    for (int i = 0; i < size / 32; i++) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(200);
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(200);
+    }
+    delay(1000);
+    return;
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setCursor(5, 5);
+  display.print("Pkt ID: ");
+  display.print(packetId);
+
+  display.setCursor(5, 18);
+  display.print("Sending: ");
+  display.print(size);
+  display.println(" bytes");
+
+  display.display();
+  delay(1000);
 }
 
 void setup() {
@@ -239,13 +284,35 @@ void setup() {
 }
 
 void loop() {
-  if (SendPacket()) {
-    drawPassed("Packet Sent");
-    delay(5000);
-  } else {
-    drawFailed("Packet Fail");
-    delay(5000);
+  for (int i = 0; i < numPacketSizes; i++) {
+    int size = packetSizes[i];
+
+    for (int j = 0; j < 3; j++) {
+      displayPacketSize(size, packetId);
+
+      if (SendPacketWithSize(size, packetId)) {
+        drawPassed("Packet Sent");
+      } else {
+        drawFailed("Packet Fail");
+      }
+      packetId++;
+      myDelay(PACKET_INTERVAL);
+    }
   }
 
-  myDelay(PACKET_INTERVAL);
+  // Done sending all packet sizes
+  if (useLEDOnly) {
+    while (true) {
+      blinkPassed();
+      delay(3000);
+    }
+  } else {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(20, 12);
+    display.println("Test Complete!");
+    display.display();
+    while (true); // Halt after test
+  }
 }
