@@ -215,7 +215,7 @@ void displayPacketSize(int size, int packetId) {
       digitalWrite(LED_BUILTIN, LOW);
       delay(200);
     }
-    delay(1000);
+    delay(3000);
     return;
   }
 
