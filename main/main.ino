@@ -195,7 +195,7 @@ bool SendPacketWithSize(int size, int packetId) {
   payload[0] = packetId; // Packet ID in first byte
 
   for (int i = 1; i < size - 1; i++) {
-    payload[i] = i % 256;       // Fill with pattern or zeros
+    payload[i] = 1;       // Fill with 1
   }
 
   payload[size - 1] = size;     // Packet size in last byte
