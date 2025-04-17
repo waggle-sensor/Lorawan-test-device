@@ -270,7 +270,7 @@ void setup() {
   myDelay(200);
   modem.minPollInterval(60);
   modem.setPort(10);
-  modem.dataRate(3);
+  modem.dataRate(0);
   modem.setADR(true);
   myDelay(200);
 
