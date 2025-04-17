@@ -292,8 +292,10 @@ void loop() {
 
       if (SendPacketWithSize(size, packetId)) {
         drawPassed("Packet Sent");
+        delay(5000);
       } else {
         drawFailed("Packet Fail");
+        delay(5000);
       }
       packetId++;
       myDelay(PACKET_INTERVAL);
