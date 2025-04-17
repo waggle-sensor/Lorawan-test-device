@@ -4,7 +4,6 @@
 
 #include <MKRWAN.h>
 #include <ArduinoLowPower.h>
-#include "arduino_secrets.h"
 using namespace std;
 
 LoRaModem modem;
