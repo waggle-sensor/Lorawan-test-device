@@ -35,6 +35,7 @@ const int MAX_WAIT_TIME = 60000;
 
 // packet sizes
 int packetSizes[] = {32, 64, 96, 128, 132};
+int dataRates[] = {0, 1, 2, 3}; // Data rates for US915
 int numPacketSizes = sizeof(packetSizes) / sizeof(packetSizes[0]);
 
 // Global counter
@@ -200,6 +201,7 @@ bool SendPacketWithSize(int size, int packetId) {
 
   payload[size - 1] = size;     // Packet size in last byte
 
+  modem.dataRate(3);// https://github.com/arduino/mkrwan1300-fw/issues/6#issuecomment-896926106
   modem.beginPacket();
   modem.write(payload, size);
   bool success = modem.endPacket(true) > 0;
@@ -242,14 +244,6 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
   Wire.begin();
 
-  // if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-  //   useLEDOnly = true;
-  // } else {
-  //   display.display();
-  //   display.clearDisplay();
-  //   initializeSnakeAngles();
-  // }
-
   // Manually check if the OLED responds on I2C
   Wire.beginTransmission(SCREEN_ADDRESS);
   if (Wire.endTransmission() != 0) {
@@ -269,10 +263,10 @@ void setup() {
   modem.begin(US915);
   myDelay(200);
   modem.minPollInterval(60);
-  modem.setPort(10);
+  modem.setPort(3);
   modem.dataRate(0);
   modem.setADR(true);
-  myDelay(200);
+  myDelay(1000);
 
   if (!joinNetwork()) {
     // join failed, stop further execution
