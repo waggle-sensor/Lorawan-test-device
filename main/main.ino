@@ -35,7 +35,14 @@ const int MAX_WAIT_TIME = 60000;
 
 // packet sizes
 int packetSizes[] = {32, 64, 96, 128, 132};
-int dataRates[] = {0, 1, 2, 3}; // Data rates for US915
+// Data rates for US915 (no DR0, data size is too small)
+int dataRates[] = {1, 2, 3}; 
+// Max application payload size (bytes) per DR for US915
+int maxPayloadPerDR[] = {
+  53,   // DR1: SF9 / 125 kHz
+  125,  // DR2: SF8 / 125 kHz
+  222   // DR3: SF7 / 125 kHz
+};
 int numPacketSizes = sizeof(packetSizes) / sizeof(packetSizes[0]);
 
 // Global counter
@@ -288,7 +295,12 @@ void loop() {
     for (int dr = 0; dr < 4; dr++) { // Loop through data rates
       int dataRate = dataRates[dr];
 
-      for (int j = 0; j < 3; j++) { // Send 3 packets for each size each data rate
+      // Skip if packet size exceeds allowed payload size for this DR
+      if (size > maxPayloadPerDR[dr]) {
+        continue;  // Don't try to send this combo
+      }
+
+      for (int j = 0; j < 3; j++) { // Send 3 packets per valid combination of size and DR
         displayPacketSize(size, packetId, dataRate);
 
         if (SendPacketWithSize(size, packetId, dataRate)) {
