@@ -188,8 +188,8 @@ bool joinNetwork() {
   }
 }
 
-bool SendPacketWithSize(int size, int packetId) {
-  if (size > 255) return false; // Safety check for byte overrun
+bool SendPacketWithSize(int size, int packetId, int dataRate) {
+  if (size > 255) return false;
 
   uint8_t payload[size];
 
@@ -201,7 +201,7 @@ bool SendPacketWithSize(int size, int packetId) {
 
   payload[size - 1] = size;     // Packet size in last byte
 
-  modem.dataRate(3);// https://github.com/arduino/mkrwan1300-fw/issues/6#issuecomment-896926106
+  modem.dataRate(dataRate);  // https://github.com/arduino/mkrwan1300-fw/issues/6#issuecomment-896926106
   modem.beginPacket();
   modem.write(payload, size);
   bool success = modem.endPacket(true) > 0;
@@ -209,7 +209,7 @@ bool SendPacketWithSize(int size, int packetId) {
   return success;
 }
 
-void displayPacketSize(int size, int packetId) {
+void displayPacketSize(int size, int packetId, int dataRate) {
   if (useLEDOnly) {
     for (int i = 0; i < size / 32; i++) {
       digitalWrite(LED_BUILTIN, HIGH);
@@ -225,14 +225,18 @@ void displayPacketSize(int size, int packetId) {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
-  display.setCursor(5, 5);
+  display.setCursor(0, 0);
   display.print("Pkt ID: ");
   display.print(packetId);
 
-  display.setCursor(5, 18);
-  display.print("Sending: ");
+  display.setCursor(0, 12);
+  display.print("Size: ");
   display.print(size);
-  display.println(" bytes");
+  display.print("B");
+
+  display.setCursor(0, 24);
+  display.print("DR: ");
+  display.print(dataRate);
 
   display.display();
   delay(1000);
@@ -278,21 +282,26 @@ void setup() {
 }
 
 void loop() {
-  for (int i = 0; i < numPacketSizes; i++) {
+  for (int i = 0; i < numPacketSizes; i++) { // Loop through packet sizes
     int size = packetSizes[i];
 
-    for (int j = 0; j < 3; j++) {
-      displayPacketSize(size, packetId);
+    for (int dr = 0; dr < 4; dr++) { // Loop through data rates
+      int dataRate = dataRates[dr];
 
-      if (SendPacketWithSize(size, packetId)) {
-        drawPassed("Packet Sent");
-        delay(5000);
-      } else {
-        drawFailed("Packet Fail");
-        delay(5000);
+      for (int j = 0; j < 3; j++) { // Send 3 packets for each size each data rate
+        displayPacketSize(size, packetId, dataRate);
+
+        if (SendPacketWithSize(size, packetId, dataRate)) {
+          drawPassed("Packet Sent");
+          delay(5000);
+        } else {
+          drawFailed("Packet Fail");
+          delay(5000);
+        }
+
+        packetId++;
+        myDelay(PACKET_INTERVAL);
       }
-      packetId++;
-      myDelay(PACKET_INTERVAL);
     }
   }
 
