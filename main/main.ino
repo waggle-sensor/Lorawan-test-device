@@ -17,7 +17,7 @@ bool useLEDOnly = false;
 LoRaModem modem;
 String appEui = SECRET_APP_EUI;
 String appKey = SECRET_APP_KEY;
-const int PACKET_INTERVAL = 15000; // Send packet every 15 seconds
+const int PACKET_INTERVAL = 20000; // Send packet every 20 seconds
 
 // button vars
 const int BUTTON_PIN = 2;
@@ -34,7 +34,7 @@ float angles[SNAKE_LEN];
 const int MAX_WAIT_TIME = 60000;
 
 // packet sizes
-int packetSizes[] = {32, 64, 96, 128, 132};
+int packetSizes[] = {16, 32, 64}; //any bytes higher than 80 fail
 // Data rates for US915 (no DR0, data size is too small)
 int dataRates[] = {1, 2, 3}; 
 // Max application payload size (bytes) per DR for US915
@@ -180,12 +180,27 @@ void myDelay(int waitTime) {
 
 bool joinNetwork() {
   int waitTime = 8000;
+
   while (true) {
     if (modem.joinOTAA(appEui, appKey, 60000)) {
-      drawPassed("Join Pass");
-      delay(5000);
-      return true;
+      
+      // Try sending a short test packet to confirm the join really worked
+      uint8_t testPayload[3] = {0x01, 0x01, 0x03};  // Simple 3-byte test packet
+      modem.beginPacket();
+      modem.write(testPayload, sizeof(testPayload));
+      bool success = modem.endPacket(true) > 0;
+
+      if (success) {
+        drawPassed("Join + Send OK");
+        delay(5000);
+        return true;
+      } else {
+        drawFailed("Join OK, Send Fail");
+        delay(5000);
+        return false;  // Joined but failed to send — not fully working
+      }
     }
+
     myDelay(waitTime);
     waitTime *= 2;
     if (waitTime > MAX_WAIT_TIME) {
@@ -246,7 +261,7 @@ void displayPacketSize(int size, int packetId, int dataRate) {
   display.print(dataRate);
 
   display.display();
-  delay(1000);
+  delay(3000);
 }
 
 void setup() {
